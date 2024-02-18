@@ -1,0 +1,79 @@
+```{r}
+#function to manage packages
+EnsurePackage <- function(x){
+  
+  x <- as.character(x)
+  
+  #this statement will return TRUE if package not yet downloaded/installed
+  if (!require(x,character.only=TRUE)){
+    
+    install.packages(pkgs=x, repos = "http://cran.r-project.org")
+    require(x,character.only=TRUE)
+  }
+}
+```
+
+```{r}
+#ensure required packages are installed
+EnsurePackage("tidyverse")
+EnsurePackage("readxl")
+
+#load required libraries
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+#download Employment Growth File and Create a Data Frame
+
+#URLs of datasets to be used:
+employmentGrowth <- "https://datacatalogfiles.worldbank.org/ddh-published/0038045/DR0046261/public_use-industry-employment-growth.xlsx?versionId=2023-01-19T09:28:51.4382607Z"
+
+#download this file from the web into a temporary Excel file
+download.file(employmentGrowth, "tmpExcelFileEmploymentGrowth.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+EmploymentGrowthDF <- data.frame(read_excel("tmpExcelFileEmploymentGrowth.xlsx", sheet = "Growth from Industry Transition"))
+```
+
+```{r}
+#download Skills Needs File and Create a Data Frame
+
+#URLs of datasets to be used:
+skillsNeeds <- "https://datacatalogfiles.worldbank.org/ddh-published/0038027/DR0046191/public_use-industry-skills-needs.xlsx?versionId=2023-01-19T03:44:21.4528001Z"
+
+#download this file from the web into a temporary Excel file
+download.file(skillsNeeds, "tmpExcelFileSkillNeeds.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+skillsNeedsDF <- data.frame(read_excel("tmpExcelFileSkillNeeds.xlsx", sheet = "Industry Skills Needs"))
+```
+
+```{r}
+#download the Consolidated Migration Info File and Create 3 Data Frames
+migrationInfo <- "https://datacatalogfiles.worldbank.org/ddh-published/0038044/DR0046256/public_use-talent-migration.xlsx?versionId=2024-02-13T16:57:39.2869535Z"
+
+#download this file from the web into a temporary Excel file
+download.file(migrationInfo, "tmpExcelFileMigration.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+countryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Country Migration"))
+#read the sheet into a new dataframe
+industryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Industry Migration"))
+#read the sheet into a new dataframe
+skillMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Skill Migration"))
+```
+
+```{r}
+#download Skills Penetration File and Create a Data Frame
+
+#URLs of datasets to be used:
+skillsPenetration <- "https://datacatalogfiles.worldbank.org/ddh-published/0038027/DR0046192/public_use-skill-penetration.xlsx?versionId=2023-01-19T03:44:28.0600027Z"
+
+#download this file from the web into a temporary Excel file
+download.file(skillsPenetration, "tmpExcelFileSkillPenetration.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+skillsPenetrationDF <- data.frame(read_excel("tmpExcelFileSkillPenetration.xlsx", sheet = "Skill Penetration"))
+```
+
