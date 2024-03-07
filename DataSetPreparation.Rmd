@@ -1,26 +1,30 @@
 ```{r}
-#function to manage packages
-EnsurePackage <- function(x){
-  
-  x <- as.character(x)
-  
-  #this statement will return TRUE if package not yet downloaded/installed
-  if (!require(x,character.only=TRUE)){
-    
-    install.packages(pkgs=x, repos = "http://cran.r-project.org")
-    require(x,character.only=TRUE)
-  }
-}
+#Websites Referenced for this work:
+#https://stackoverflow.com/questions/71461144/is-there-a-way-to-add-a-column-of-percentage-of-total-count-into-r
+#https://stackoverflow.com/questions/21878974/wrap-long-axis-labels-via-labeller-label-wrap-in-ggplot2
+#http://www.sthda.com/english/wiki/ggplot2-axis-ticks-a-guide-to-customize-tick-marks-and-labels
 ```
 
-```{r}
-#ensure required packages are installed
-EnsurePackage("tidyverse")
-EnsurePackage("readxl")
 
-#load required libraries
-library(tidyverse)
-library(readxl)
+```{r}
+#first, install and load required libraries
+#using function provided by Professor Krudys.
+
+#specify the packages needed
+packages=c("tidyverse", "readxl","ggplot2","dplyr","stats")
+
+#use this function to check if each package is on the local machine
+#if a package is installed, it will be loaded
+#if any are not, the missing package(s) will be installed and loaded
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
+
+#verify they are loaded
+search()
 ```
 
 ```{r}
@@ -34,6 +38,20 @@ download.file(employmentGrowth, "tmpExcelFileEmploymentGrowth.xlsx", quiet=TRUE,
 
 #read the sheet into a new dataframe
 EmploymentGrowthDF <- data.frame(read_excel("tmpExcelFileEmploymentGrowth.xlsx", sheet = "Growth from Industry Transition"))
+```
+
+
+```{r}
+#check for NA's in the dataset
+colSums(is.na(EmploymentGrowthDF))
+```
+
+```{r}
+#Update Employment Growth with an average for each observation
+#calculate the average of all growth measures and capture in a new column
+EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(cumulative_growth_rate=((growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018+growth_rate_2019)/5))
+
+#EmploymentGrowthDF$cumulative_growth_rate_percent <- EmploymentGrowthDF$cumulative_growth_rate_percent*100
 ```
 
 ```{r}
@@ -77,3 +95,88 @@ download.file(skillsPenetration, "tmpExcelFileSkillPenetration.xlsx", quiet=TRUE
 skillsPenetrationDF <- data.frame(read_excel("tmpExcelFileSkillPenetration.xlsx", sheet = "Skill Penetration"))
 ```
 
+#Break down employment growth by Region
+```{r}
+#East Asia & Pacific Data
+growthEAP.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+growthECA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+growthLAC.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+growthMENA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Middle East & North Africa")
+
+#North America Data
+growthNA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "North America")
+
+#South Asia Data
+growthSA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+growthSSA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Sub-Saharan Africa")
+```
+
+#Add cumulative growth rate average by industry in each region
+```{r}
+EAP_IndustryGrowth.df <- growthEAP.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+ECA_IndustryGrowth.df <- growthECA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+LAC_IndustryGrowth.df <- growthLAC.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+MENA_IndustryGrowth.df <- growthMENA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+NA_IndustryGrowth.df <- growthNA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+SA_IndustryGrowth.df <- growthSA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+SSA_IndustryGrowth.df <- growthSSA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(industry_average_rate=mean))
+
+head(EAP_IndustryGrowth.df)
+```
+
+#visualize Average Industry Growth for each Region
+```{r}
+ggplot(EAP_IndustryGrowth.df, aes(x=isic_section_name,y=industry_average_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("East Asia & Pacific: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(0, 2.75),breaks=seq(0,2.75,.25))
+
+ggplot(ECA_IndustryGrowth.df, aes(x=isic_section_name,y=cumulative_growth_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("Europe & Central Asia: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(0, 1.5), breaks=seq(0,1.5,.25))
+
+ggplot(LAC_IndustryGrowth.df, aes(x=isic_section_name,y=cumulative_growth_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("Latin America & Caribbean: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-1.75, 0), breaks=seq(-1.75,0,.25))
+
+ggplot(MENA_IndustryGrowth.df, aes(x=isic_section_name,y=cumulative_growth_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("Middle East & North Africa: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-1.75, 1), breaks=seq(-1.75,1,.25))
+
+ggplot(NA_IndustryGrowth.df, aes(x=isic_section_name,y=cumulative_growth_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("North America: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(0, 2.75), breaks=seq(0,2.75,.25))
+
+ggplot(SA_IndustryGrowth.df, aes(x=isic_section_name,y=cumulative_growth_rate)) + geom_bar(stat="identity", color="blue", fill="white") + ggtitle("South Asia: Average Growth by Industry Sector") + labs(x="ISIC Industry Category")  + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-2.0, 0), breaks=seq(-2.0,0,.25))
+```
+```{r}
+head(growthEAP.df)
+head(EAP_IndustryGrowth.df)
+dfNew <- merge(growthEAP.df, EAP_IndustryGrowth.df, by="isic_section_name")
+dfNew <- mutate(growth_rate_variance=)
+```
+
+#investigate areas of highest growth in North America:
+```{r}
+#find the index of the largest growth for 2015 and
+#output the row details
+maxGrowthIndex2015 <- which.max(growthNA.df$growth_rate_2015)
+growthNA.df[maxGrowthIndex2015,]
+
+#find the index of the largest growth for 2016 and
+#output the row details
+maxGrowthIndex2016 <- which.max(growthNA.df$growth_rate_2016)
+growthNA.df[maxGrowthIndex2016,]
+
+#find the index of the largest growth for 2017 and
+#output the row details
+maxGrowthIndex2017 <- which.max(growthNA.df$growth_rate_2017)
+growthNA.df[maxGrowthIndex2017,]
+
+#find the index of the largest growth for 2018 and
+#output the row details
+maxGrowthIndex2018 <- which.max(growthNA.df$growth_rate_2018)
+growthNA.df[maxGrowthIndex2018,]
+
+#find the index of the largest growth for 2019 and
+#output the row details
+maxGrowthIndex2019 <- which.max(growthNA.df$growth_rate_2019)
+growthNA.df[maxGrowthIndex2018,]
+```
