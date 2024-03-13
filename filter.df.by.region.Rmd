@@ -1,0 +1,182 @@
+
+
+```{r}
+#function to manage packages
+EnsurePackage <- function(x){
+  
+  x <- as.character(x)
+  
+  #this statement will return TRUE if package not yet downloaded/installed
+  if (!require(x,character.only=TRUE)){
+    
+    install.packages(pkgs=x, repos = "http://cran.r-project.org")
+    require(x,character.only=TRUE)
+  }
+}
+```
+
+```{r}
+#ensure required packages are installed
+EnsurePackage("tidyverse")
+EnsurePackage("readxl")
+
+#load required libraries
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+#download Employment Growth File and Create a Data Frame
+
+#URLs of datasets to be used:
+employmentGrowth <- "https://datacatalogfiles.worldbank.org/ddh-published/0038045/DR0046261/public_use-industry-employment-growth.xlsx?versionId=2023-01-19T09:28:51.4382607Z"
+
+#download this file from the web into a temporary Excel file
+download.file(employmentGrowth, "tmpExcelFileEmploymentGrowth.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+EmploymentGrowthDF <- data.frame(read_excel("tmpExcelFileEmploymentGrowth.xlsx", sheet = "Growth from Industry Transition"))
+```
+
+```{r}
+#download Skills Needs File and Create a Data Frame
+
+#URLs of datasets to be used:
+skillsNeeds <- "https://datacatalogfiles.worldbank.org/ddh-published/0038027/DR0046191/public_use-industry-skills-needs.xlsx?versionId=2023-01-19T03:44:21.4528001Z"
+
+#download this file from the web into a temporary Excel file
+download.file(skillsNeeds, "tmpExcelFileSkillNeeds.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+skillsNeedsDF <- data.frame(read_excel("tmpExcelFileSkillNeeds.xlsx", sheet = "Industry Skills Needs"))
+```
+
+```{r}
+#download the Consolidated Migration Info File and Create 3 Data Frames
+migrationInfo <- "https://datacatalogfiles.worldbank.org/ddh-published/0038044/DR0046256/public_use-talent-migration.xlsx?versionId=2024-02-13T16:57:39.2869535Z"
+
+#download this file from the web into a temporary Excel file
+download.file(migrationInfo, "tmpExcelFileMigration.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+countryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Country Migration"))
+#read the sheet into a new dataframe
+industryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Industry Migration"))
+#read the sheet into a new dataframe
+skillMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Skill Migration"))
+```
+
+```{r}
+#download Skills Penetration File and Create a Data Frame
+
+#URLs of datasets to be used:
+skillsPenetration <- "https://datacatalogfiles.worldbank.org/ddh-published/0038027/DR0046192/public_use-skill-penetration.xlsx?versionId=2023-01-19T03:44:28.0600027Z"
+
+#download this file from the web into a temporary Excel file
+download.file(skillsPenetration, "tmpExcelFileSkillPenetration.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+skillsPenetrationDF <- data.frame(read_excel("tmpExcelFileSkillPenetration.xlsx", sheet = "Skill Penetration"))
+```
+
+#EmploymentGrowthDF sorted by Region
+```{r}
+#East Asia & Pacific Data
+growthEAP.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+growthECA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+growthLAC.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+growthMENA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Middle East & North Africa")
+
+#North America Data
+growthNA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "North America")
+
+#South Asia Data
+growthSA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+growthSSA.df <- filter(EmploymentGrowthDF, EmploymentGrowthDF$wb_region == "Sub-Saharan Africa")
+```
+
+#industryMigrationDF sorted by Region
+```{r}
+#East Asia & Pacific Data
+industryEAP.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+industryECA.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+industryLAC.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+industryMENA.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "Middle East & North Africa")
+
+#North America Data
+industryNA.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "North America")
+
+#South Asia Data
+industrySA.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+industrySSA.df <- filter(industryMigrationDF, industryMigrationDF$wb_region == "Sub-Saharan Africa")
+```
+
+#countryMigrationDF sorted by Region
+```{r}
+#East Asia & Pacific Data
+migEAP.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+migECA.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+migLAC <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+migMENA.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "Middle East & North Africa")
+
+#North America Data
+migNA.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "North America")
+
+#South Asia Data
+migSA.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+migSSA.df <- filter(countryMigrationDF, countryMigrationDF$base_country_wb_region == "Sub-Saharan Africa")
+```
+
+#skillMigrationDF sorted by Region
+```{r}
+#East Asia & Pacific Data
+skillEAP.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+skillECA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+skillLAC.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+skillMENA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Middle East & North Africa")
+
+#North America Data
+skillNA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "North America")
+
+#South Asia Data
+skillSA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+skillSSA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Sub-Saharan Africa")
+```
+
+
+```{r}
+#skillsNeedsDF and skillsPenetrationDF DO NOT contain region
+```
+
