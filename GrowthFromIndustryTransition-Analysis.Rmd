@@ -68,10 +68,23 @@ middleIncomeIndexList <- which(EmploymentGrowthDF$wb_income=="Upper middle incom
 EmploymentGrowthDF$higher_income[highIncomeIndexList] <- 1
 EmploymentGrowthDF$higher_income[middleIncomeIndexList] <- 1
 
+#set new binary field as type factor
 EmploymentGrowthDF$higher_income <- as.factor(EmploymentGrowthDF$higher_income)
 
-head(EmploymentGrowthDF)
+#add a column to hold binary growth classification for 2019, default to 0
+EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(growth_binary_2019=0)
+
+#find indexes where 2019 growth is positive
+positiveGrowthIndexList <- which(EmploymentGrowthDF$growth_rate_2019 > 0)
+
+#set binary column to 1 at each index for higher income countries
+EmploymentGrowthDF$growth_binary_2019[positiveGrowthIndexList] <- 1
+
+#set new binary field as type factor
+EmploymentGrowthDF$growth_binary_2019 <- as.factor(EmploymentGrowthDF$growth_binary_2019)
 ```
+
+
 ```{r}
 #Break down employment growth by Region
 
@@ -498,26 +511,25 @@ ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 
 #LM to predict 2019
 #setup the linear regression model using the growth rates from 2015 to 2018 to predict rates for 2019.
-#linearModel <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = EmploymentGrowthDF)
+linearModel <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = EmploymentGrowthDF)
 
 #head(EmploymentGrowthDF)
 
 #output the summary of the linear model
-#summary(linearModel)
+summary(linearModel)
 
 #plot the correlation matrix of the net migration rates to visualize their relationships
 #corrMatrix <- cor(EmploymentGrowthDF)
 #corrplot(corrMatrix, method="circle")
 
-#par(mfrow = c(2,2))
-#plot(linearModel)
+par(mfrow = c(2,2))
+plot(linearModel)
 
 ```
 
 ```{r}
-#SVM to predict income
 #make the sampling predictable by setting the seed value
-set.seed(111)
+set.seed(1000)
 
 #randomly sample elements to go into a training data set
 #training will be 70% of the data
@@ -532,7 +544,7 @@ testingDataSet <- EmploymentGrowthDF[-trainList,]
 
 #train the model using the training data set and the svmRadial method
 #svmRadial kernel to do this projection
-svm.model <- train(higher_income~.,
+svm.model <- train(higher_income~wb_region,
                    data=trainingDataSet,method="svmRadial",
                    trControl=trainControl(method="none"),
                    preProc=c("center","scale"))
@@ -553,10 +565,63 @@ confusionMatrix
 
 ```{r}
 #build the model
-model.rpart <- rpart(wb_income~.,data=trainingDataSet,method="class")
+model.rpart <- rpart(higher_income~wb_region,data=trainingDataSet,method="class")
+
+#visualize the results using rpart.plot()
+rpart.plot(model.rpart)
 ```
 
 ```{r}
+#make predictions on the test set
+predictions <- predict(model.rpart, testingDataSet, type="class")
+
+#output results in table format
+table(testingDataSet$higher_income,predictions)
+```
+
+
+
+```{r}
+#make the sampling predictable by setting the seed value
+set.seed(1000)
+
+#randomly sample elements to go into a training data set
+#training will be 70% of the data
+#this returns a set of indices
+trainList2 <- createDataPartition(y=EmploymentGrowthDF$growth_binary_2019, p=0.70,list=FALSE)
+
+#include all of the elements at the indices in the training data set
+trainingDataSet2 <- EmploymentGrowthDF[trainList2,]
+
+#construct the test set from everything that didn't go into training
+testingDataSet2 <- EmploymentGrowthDF[-trainList2,]
+
+#train the model using the training data set and the svmRadial method
+#svmRadial kernel to do this projection
+svm.model2 <- train(growth_binary_2019~.,
+                   data=trainingDataSet,method="svmRadial",
+                   trControl=trainControl(method="none"),
+                   preProc=c("center","scale"))
+
+#output the final model summary
+svm.model2$finalModel
+
+```
+
+
+```{r}
+#build the model
+model.rpart2 <- rpart(growth_binary_2019~.,data=trainingDataSet,method="class")
+
 #visualize the results using rpart.plot()
-rpart.plot(model.rpart)
+rpart.plot(model.rpart2)
+```
+
+
+```{r}
+#make predictions on the test set
+predictions2 <- predict(model.rpart2, testingDataSet, type="class")
+
+#output results in table format
+table(testingDataSet$growth_binary_2019,predictions2)
 ```
