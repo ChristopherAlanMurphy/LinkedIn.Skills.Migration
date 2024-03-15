@@ -13,7 +13,7 @@
 #using function provided by Professor Krudys.
 
 #specify the packages needed
-packages=c("tidyverse", "readxl","ggplot2","dplyr","stats")
+packages=c("tidyverse", "readxl","ggplot2","dplyr","stats","caret","rpart","rpart.plot")
 
 #use this function to check if each package is on the local machine
 #if a package is installed, it will be loaded
@@ -56,6 +56,20 @@ colSums(is.na(EmploymentGrowthDF))
 #Update Employment Growth with an average for each observation
 #calculate the average of all growth measures and capture in a new column
 EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(cumulative_growth_rate=((growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018+growth_rate_2019)/5))
+
+#add a column to hold binary income classification, default to 0
+EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(higher_income=0)
+
+#find indexes of higher income countries
+highIncomeIndexList <- which(EmploymentGrowthDF$wb_income=="High income")
+middleIncomeIndexList <- which(EmploymentGrowthDF$wb_income=="Upper middle income")
+
+#set binary column to 1 at each index for higher income countries
+EmploymentGrowthDF$higher_income[highIncomeIndexList] <- 1
+EmploymentGrowthDF$higher_income[middleIncomeIndexList] <- 1
+
+EmploymentGrowthDF$higher_income <- as.factor(EmploymentGrowthDF$higher_income)
+
 head(EmploymentGrowthDF)
 ```
 ```{r}
@@ -176,15 +190,6 @@ ggplot(EAP_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 
 ```
 
-
-```{r}
-###  --- EAST ASIA & PACIFIC: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
-```
-
-
 ```{r}
 ###  --- EUROPE AND CENTRAL ASIA: VISUALIZING GROWTH FROM INDUSTRY TRANSITIONS ---  ###
 
@@ -231,14 +236,6 @@ ggplot(ECA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 25), breaks=seq(-10,25,10)) + 
   labs(title = "Europe & Central Asia: Financial and insurance activities", subtitle = "Growth from Industry Transition IQR for the Financial and Insurace Industry Segments", x="Financial and Insurace Industry Segments")
-```
-
-
-```{r}
-###  --- EUROPE AND CENTRAL ASIA: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
 ```
 
 
@@ -295,14 +292,6 @@ ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 
 
 ```{r}
-###  ---LATIN AMERICA & CARRIBEAN: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
-```
-
-
-```{r}
 ###  --- MIDDLE EAST & NORTH AFRICA: VISUALIZING GROWTH FROM INDUSTRY TRANSITIONS ---  ###
 
 #visualize Average Industry Growth for the 6 ISIC Sectors:
@@ -350,14 +339,6 @@ ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 12), breaks=seq(-10,12,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "Middle East & North Africa: Information and communication", subtitle = "Growth from Industry Transition IQR for the Information and communication Industry Segments", x="Information and Communication Industry Segments")
-```
-
-
-```{r}
-###  --- MIDDLE EAST & NORTH AFRICA: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
 ```
 
 
@@ -413,14 +394,6 @@ ggplot(NA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 
 
 ```{r}
-###  --- NORTH AMERICA: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
-```
-
-
-```{r}
 ###  --- SOUTH ASIA: VISUALIZING GROWTH FROM INDUSTRY TRANSITIONS ---  ###
 
 #visualize Average Industry Growth for the 6 ISIC Sectors:
@@ -468,14 +441,6 @@ ggplot(SA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
   scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-8, 4), breaks=seq(-8,4,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "South Asia: Information and communication", subtitle = "Growth from Industry Transition IQR for the Information and Communication Industry Segments", x="Information and Communication Industry Segments")
-```
-
-
-```{r}
-###  --- SOUTH ASIA: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
-
-#TBD
-
 ```
 
 
@@ -530,8 +495,68 @@ ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 ```
 
 ```{r}
-###  --- SUB SAHARAN AFRICA: PREDICTION MODELS FOR GROWTH FROM INDUSTRY TRANSITIONS ---  ###
 
-#TBD
+#LM to predict 2019
+#setup the linear regression model using the growth rates from 2015 to 2018 to predict rates for 2019.
+#linearModel <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = EmploymentGrowthDF)
 
+#head(EmploymentGrowthDF)
+
+#output the summary of the linear model
+#summary(linearModel)
+
+#plot the correlation matrix of the net migration rates to visualize their relationships
+#corrMatrix <- cor(EmploymentGrowthDF)
+#corrplot(corrMatrix, method="circle")
+
+#par(mfrow = c(2,2))
+#plot(linearModel)
+
+```
+
+```{r}
+#SVM to predict income
+#make the sampling predictable by setting the seed value
+set.seed(111)
+
+#randomly sample elements to go into a training data set
+#training will be 70% of the data
+#this returns a set of indices
+trainList <- createDataPartition(y=EmploymentGrowthDF$higher_income,p=0.70,list=FALSE)
+
+#include all of the elements at the indices in the training data set
+trainingDataSet <- EmploymentGrowthDF[trainList,]
+
+#construct the test set from everything that didn't go into training
+testingDataSet <- EmploymentGrowthDF[-trainList,]
+
+#train the model using the training data set and the svmRadial method
+#svmRadial kernel to do this projection
+svm.model <- train(higher_income~.,
+                   data=trainingDataSet,method="svmRadial",
+                   trControl=trainControl(method="none"),
+                   preProc=c("center","scale"))
+
+#output the final model summary
+svm.model$finalModel
+
+```
+```{r}
+#Assess fit of the model with the test data
+svmPrediction <- predict(svm.model, testingDataSet, type="raw")
+
+#build a confusion matrix with caret package function
+confusionMatrix <- confusionMatrix(svmPrediction,testingDataSet$higher_income)
+
+confusionMatrix
+```
+
+```{r}
+#build the model
+model.rpart <- rpart(wb_income~.,data=trainingDataSet,method="class")
+```
+
+```{r}
+#visualize the results using rpart.plot()
+rpart.plot(model.rpart)
 ```
