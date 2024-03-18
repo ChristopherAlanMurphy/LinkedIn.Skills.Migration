@@ -162,7 +162,7 @@ EAP_Largest_Average$cumulative_growth_rate <- EAP_Largest_Average$cumulative_gro
 #plot percentages
 ggplot(EAP_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-13:18) + geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  scale_x_continuous(breaks=-13:18) + geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Count", limits=c(0, 60), breaks=seq(0,60,5)) + 
   labs(title = "East Asia & Pacific: Financial and insurance activities", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth", x="Industry Segment Mean Variance") 
 
@@ -170,13 +170,13 @@ ggplot(EAP_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(EAP_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-25, 70), breaks=seq(-25,70,5)) + 
   labs(title = "East Asia & Pacific: Financial and insurance activities", subtitle = "Range of Growth from Industry Transition for the Financial and Insurace Industry Segments", x="Financial and Insurace Industry Segments") 
 
 #visualize growth by industry section - box plot
 ggplot(EAP_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
-  geom_boxplot(color="blue", fill="white") + geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_boxplot(color="blue", fill="white") + geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 20), breaks=seq(-10,20,2)) + 
   labs(title = "East Asia & Pacific: Financial and insurance activities", subtitle = "Growth from Industry Transition IQR for the Financial and Insurace Industry Segments", x="Financial and Insurace Industry Segments")
@@ -211,7 +211,7 @@ ECA_Largest_Average$cumulative_growth_rate <- ECA_Largest_Average$cumulative_gro
 #3.) plot percentages
 ggplot(ECA_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-13:24) + geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  scale_x_continuous(breaks=-13:24) + geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Count", limits=c(0, 140), breaks=seq(0,140,10))  + 
   labs(title = "Europe & Central Asia: Financial and insurance activities", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth", x="Industry Segment Mean Variance") 
 
@@ -219,13 +219,13 @@ ggplot(ECA_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(ECA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-60, 150), breaks=seq(-60,150,10)) + 
   labs(title = "Europe & Central Asia: Financial and insurance activities", subtitle = "Range of Growth from Industry Transition for the Financial and Insurace Industry Segments", x="Financial and Insurace Industry Segments")
 
 #visualize growth by industry section - box plot
 ggplot(ECA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
-  geom_boxplot(color="blue", fill="white") + geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_boxplot(color="blue", fill="white") + geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 25), breaks=seq(-10,25,10)) + 
   labs(title = "Europe & Central Asia: Financial and insurance activities", subtitle = "Growth from Industry Transition IQR for the Financial and Insurace Industry Segments", x="Financial and Insurace Industry Segments")
@@ -260,7 +260,7 @@ LAC_Largest_Average$cumulative_growth_rate <- LAC_Largest_Average$cumulative_gro
 #plot percentages
 ggplot(LAC_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-24:13)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5)  + 
+  scale_x_continuous(breaks=-24:13)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5)  + 
   scale_y_continuous(name="Count", limits=c(0, 60), breaks=seq(0,60,5)) + 
   labs(title = "Latin America & Caribbean: Information and communication", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth",x="Industry Segment Mean Variance") 
 
@@ -268,7 +268,7 @@ ggplot(LAC_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-55, 35), breaks=seq(-55,35,10)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "Latin America & Caribbean: Information and communication", subtitle = "Range of Growth from Industry Transition for the Information and communication Industry Segments", x="Information and Communication Industry Segments")
@@ -276,7 +276,7 @@ ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 #visualize growth by industry section - box plot
 ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_boxplot(color="blue", fill="white") + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 12), breaks=seq(-10,12,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
@@ -312,14 +312,14 @@ MENA_Largest_Average$cumulative_growth_rate <- MENA_Largest_Average$cumulative_g
 #plot percentages
 ggplot(MENA_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-20:30)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5)  + 
+  scale_x_continuous(breaks=-20:30)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5)  + 
   scale_y_continuous(name="Count", limits=c(0, 60), breaks=seq(0,60,5)) + 
   labs(title = "Middle East & North Africa: Information and communication", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth",x="Industry Segment Mean Variance") 
 
 #visualize growth by industry section - bar chart
 ggplot(MENA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-80, 60), breaks=seq(-80,60,10)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "Middle East & North Africa: Information and communication", subtitle="Range of Growth from Industry Transition for the Information and communication Industry Segments", x="Information and Communication Industry Segments")
@@ -327,7 +327,7 @@ ggplot(MENA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 #visualize growth by industry section - box plot
 ggplot(LAC_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_boxplot(color="blue", fill="white") + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-10, 12), breaks=seq(-10,12,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
@@ -362,7 +362,7 @@ NA_Largest_Average$cumulative_growth_rate <- NA_Largest_Average$cumulative_growt
 #plot percentages
 ggplot(NA_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=1) + 
-  scale_x_continuous(breaks=-20:30)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5)  + 
+  scale_x_continuous(breaks=-20:30)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5)  + 
   scale_y_continuous(name="Count", limits=c(0, 6), breaks=seq(0,6,2)) + 
   labs(title = "North America: Financial and insurance activities", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth",x="Industry Segment Mean Variance") 
 
@@ -370,7 +370,7 @@ ggplot(NA_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(NA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-1, 20), breaks=seq(-1,20,10)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "North America: Financial and insurance activities",subtitle="Range of Growth from Industry Transition for the Financial and Insurace Industry Segments", x="Financial and Insurance Activities Industry Segments")
@@ -378,7 +378,7 @@ ggplot(NA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 #visualize growth by industry section - box plot
 ggplot(NA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_boxplot(color="blue", fill="white") + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(0, 10), breaks=seq(0,10,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
@@ -413,7 +413,7 @@ SA_Largest_Average$cumulative_growth_rate <- SA_Largest_Average$cumulative_growt
 #plot percentages
 ggplot(SA_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-20:20)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5)  + 
+  scale_x_continuous(breaks=-20:20)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5)  + 
   scale_y_continuous(name="Count", limits=c(0, 11), breaks=seq(0,11,1)) + 
   labs(title = "South Asia: Information and communication", subtitle = "Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth",x="Industry Segment Mean Variance") 
   
@@ -421,7 +421,7 @@ ggplot(SA_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(SA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="Average Growth Rate 2015-2019 (%)", limits=c(-28, 8), breaks=seq(-28,8,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "South Asia: Information and communication", subtitle = "Range of Growth from Industry Transition for the Information and Communication Industry Segments", x="Information and Communication Industry Segments")
@@ -429,7 +429,7 @@ ggplot(SA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 #visualize growth by industry section - box plot
 ggplot(SA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_boxplot(color="blue", fill="white") + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-8, 4), breaks=seq(-8,4,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
@@ -464,7 +464,7 @@ SSA_Largest_Average$cumulative_growth_rate <- SSA_Largest_Average$cumulative_gro
 #plot percentages
 ggplot(SSA_Largest_Average, aes(x=growth_rate_variance)) + 
   geom_histogram(color="blue", fill="white", binwidth=5) + 
-  scale_x_continuous(breaks=-20:20)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", size=1.5)  + 
+  scale_x_continuous(breaks=-20:20)+ geom_vline(xintercept = 0, linetype="dotted", color = "red", linewidth=1.5)  + 
   scale_y_continuous(name="Count", limits=c(-5, 20), breaks=seq(-5,20,10)) + 
   labs(title="Sub Saharan Africa: Information and communication", subtitle="Variance of Average Growth of Industry Segments from the ISIC Sector Average Growth",x="Industry Segment Mean Variance") 
 
@@ -472,7 +472,7 @@ ggplot(SSA_Largest_Average, aes(x=growth_rate_variance)) +
 ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_bar(stat="identity", color="blue", fill="white") + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_y_continuous(name="AVerage Growth Rate 2015-2019 (%)", limits=c(-40, 15), breaks=seq(-40,15,5)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
   labs(title = "Sub Saharan Africa: Information and communication", subtitle = "Range of Growth from Industry Transition for the Information and Communication Industry Segments", x="Information and Communication Industry Segments")
@@ -480,7 +480,7 @@ ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
 #visualize growth by industry section - box plot
 ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) + 
   geom_boxplot(color="blue", fill="white") + 
-  geom_hline(yintercept = 0, linetype="dotted", color = "red", size=1.5) + 
+  geom_hline(yintercept = 0, linetype="dotted", color = "red", linewidth=1.5) + 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + 
   scale_y_continuous(name="Cumulative Growth Rate 2015-2019 (%)", limits=c(-8, 8), breaks=seq(-8,8,2)) + 
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1)) + 
