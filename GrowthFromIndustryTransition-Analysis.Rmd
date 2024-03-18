@@ -13,7 +13,7 @@
 #using function provided by Professor Krudys.
 
 #specify the packages needed
-packages=c("tidyverse", "readxl","ggplot2","dplyr","stats","caret","rpart","rpart.plot")
+packages=c("tidyverse", "readxl","ggplot2","dplyr","stats","caret","rpart","rpart.plot","corrplot")
 
 #use this function to check if each package is on the local machine
 #if a package is installed, it will be loaded
@@ -34,6 +34,8 @@ search()
 
 file1 <- "tmpExcelFileEmploymentGrowth.xlsx"
 
+#first check if the file has already been downloaded
+#skip the download if it exists
 if (!file.exists(file1)) {
   
 #URLs of datasets to be used:
@@ -44,6 +46,7 @@ download.file(employmentGrowth, "tmpExcelFileEmploymentGrowth.xlsx", quiet=TRUE,
 } 
 ```
 
+
 ```{r}
 #read the sheet into a new dataframe
 EmploymentGrowthDF <- data.frame(read_excel("tmpExcelFileEmploymentGrowth.xlsx", sheet = "Growth from Industry Transition"))
@@ -52,36 +55,12 @@ EmploymentGrowthDF <- data.frame(read_excel("tmpExcelFileEmploymentGrowth.xlsx",
 colSums(is.na(EmploymentGrowthDF))
 ```
 
+
 ```{r}
-#Update Employment Growth with an average for each observation
-#calculate the average of all growth measures and capture in a new column
-EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(cumulative_growth_rate=((growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018+growth_rate_2019)/5))
-
-#add a column to hold binary income classification, default to 0
-EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(higher_income=0)
-
-#find indexes of higher income countries
-highIncomeIndexList <- which(EmploymentGrowthDF$wb_income=="High income")
-middleIncomeIndexList <- which(EmploymentGrowthDF$wb_income=="Upper middle income")
-
-#set binary column to 1 at each index for higher income countries
-EmploymentGrowthDF$higher_income[highIncomeIndexList] <- 1
-EmploymentGrowthDF$higher_income[middleIncomeIndexList] <- 1
-
-#set new binary field as type factor
-EmploymentGrowthDF$higher_income <- as.factor(EmploymentGrowthDF$higher_income)
-
-#add a column to hold binary growth classification for 2019, default to 0
-EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(growth_binary_2019=0)
-
-#find indexes where 2019 growth is positive
-positiveGrowthIndexList <- which(EmploymentGrowthDF$growth_rate_2019 > 0)
-
-#set binary column to 1 at each index for higher income countries
-EmploymentGrowthDF$growth_binary_2019[positiveGrowthIndexList] <- 1
-
-#set new binary field as type factor
-EmploymentGrowthDF$growth_binary_2019 <- as.factor(EmploymentGrowthDF$growth_binary_2019)
+  #Update Employment Growth with an average for each observation
+  #calculate the average of all growth measures and capture in a new column
+  #use this field to visualize growth in each region
+  EmploymentGrowthDF <- EmploymentGrowthDF %>% mutate(cumulative_growth_rate=((growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018+growth_rate_2019)/5))
 ```
 
 
@@ -121,6 +100,7 @@ NA_EmployeeGrowth.df <- growthNA.df %>% group_by(isic_section_name) %>% summariz
 SA_EmployeeGrowth.df <- growthSA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(isic_section_mean_rate=mean))
 SSA_EmployeeGrowth.df <- growthSSA.df %>% group_by(isic_section_name) %>% summarize_at(vars(cumulative_growth_rate), list(isic_section_mean_rate=mean))
 ```
+
 
 ```{r}
 #merge the isic_section_mean back into the regional data frames
@@ -507,76 +487,273 @@ ggplot(SSA_Largest_Average, aes(x=industry_name,y=cumulative_growth_rate)) +
   labs(title = "Sub Saharan Africa: Information and communication", subtitle = "Growth from Industry Transition IQR for the Information and Communication Industry Segments", x="Information and Communication Industry Segments")
 ```
 
+
+
 ```{r}
+#### PREPARE A NEW DATA FRAME WITH ONLY THE NUMERIC VALUES NEEDED FOR MODELING ####
 
-#LM to predict 2019
-#setup the linear regression model using the growth rates from 2015 to 2018 to predict rates for 2019.
-linearModel <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = EmploymentGrowthDF)
+#capture the data into a new data frame to hold only numeric values
+  calculatedFieldsDF <- EmploymentGrowthDF
+  
+  ### START: High INCOME BINARY FIELD SET UP ###
 
-#head(EmploymentGrowthDF)
+    #1.) add a column to hold high income binary, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(high_income=0)
+    
+    #2.) find indexes of higher income countries
+    highIncomeIndexList <- which(calculatedFieldsDF$wb_income=="High income")
+    
+    #3.) capture high income countries = 1
+    calculatedFieldsDF$high_income[highIncomeIndexList] <- 1
+    
+    #4.) set field type to factor
+    calculatedFieldsDF$high_income <- as.factor(calculatedFieldsDF$high_income)
+    
+  ### END: HIGH INCOME BINARY FIELD SET UP ###
+  
+  ### START: UPPER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(upper_middle_income=0)
+    
+    #2.) find indexes of middle income countries
+    upperMiddleIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Upper middle income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$upper_middle_income[upperMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$upper_middle_income <- as.factor(calculatedFieldsDF$upper_middle_income)
+    
+  ### END: UPPER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+  ### START: LOWER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(lower_middle_income=0)
+    
+    #2.) find indexes of middle income countries
+    lowerMiddleIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Lower middle income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$lower_middle_income[lowerMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$lower_middle_income <- as.factor(calculatedFieldsDF$lower_middle_income)
+    
+  ### END: LOWER MIDDLE INCOME BINARY FIELD SET UP ###
 
-#output the summary of the linear model
-summary(linearModel)
+  ### START: LOW INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(low_income=0)
+    
+    #2.) find indexes of middle income countries
+    lowIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Low income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$low_income[lowIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$low_income <- as.factor(calculatedFieldsDF$low_income)
+    
+  ### END: LOW INCOME BINARY FIELD SET UP ###
+    
+  ### START: BLENDED HIGHER INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold blended upper income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(blended_higher_income=0)
+    
+    #2.) capture middle income countries = 1
+    calculatedFieldsDF$blended_higher_income[highIncomeIndexList] <- 1
+    calculatedFieldsDF$blended_higher_income[upperMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$blended_higher_income <- as.factor(calculatedFieldsDF$blended_higher_income)
+    
+  ### END: BLENDED HIGHER INCOME BINARY FIELD SET UP ###
 
-#plot the correlation matrix of the net migration rates to visualize their relationships
-#corrMatrix <- cor(EmploymentGrowthDF)
-#corrplot(corrMatrix, method="circle")
+  ### START: 2019 GROWTH CLASSIFICATION BINARY FIELD SET UP ###    
+ 
+    #1.) add a column to hold binary growth classification for 2019, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(growth_classification_2019=0)
+  
+    #2.) find indexes where 2019 growth is positive
+    positiveGrowthIndexList <- which(calculatedFieldsDF$growth_rate_2019 > 0)
+  
+    #3.) capture 2019 growth classification = 1
+    calculatedFieldsDF$growth_classification_2019[positiveGrowthIndexList] <- 1
+  
+    #4.) set new binary field as type factor
+    calculatedFieldsDF$growth_classification_2019 <- as.factor(calculatedFieldsDF$growth_classification_2019)
+    
+  ### END: 2019 GROWTH CLASSIFICATION BINARY FIELD SET UP ### 
+```
 
-par(mfrow = c(2,2))
-plot(linearModel)
+```{r}
+#capture only the numeric variables in a new data frame
+modelingDataFieldsDF <- data.frame(blended_higher_income=calculatedFieldsDF$blended_higher_income,
+                                   high_income=calculatedFieldsDF$high_income,
+                                   upper_middle_income=calculatedFieldsDF$upper_middle_income,
+                                   lower_middle_income=calculatedFieldsDF$lower_middle_income,
+                                   growth_classification_2019=calculatedFieldsDF$growth_classification_2019,
+                                   growth_rate_2015=calculatedFieldsDF$growth_rate_2015,
+                                   growth_rate_2016=calculatedFieldsDF$growth_rate_2016,
+                                   growth_rate_2017=calculatedFieldsDF$growth_rate_2017,
+                                   growth_rate_2018=calculatedFieldsDF$growth_rate_2018,
+                                   growth_rate_2019=calculatedFieldsDF$growth_rate_2019,
+                                   wb_region=calculatedFieldsDF$wb_region)
 
+modelingDataFieldsDF$wb_region <- as.factor(modelingDataFieldsDF$wb_region)
+
+#view the structure of the data frame
+str(modelingDataFieldsDF)
+```
+
+```{r}
+#view the correlation matrix for East Asia & Pacific
+numericFieldsEAP <- modelingDataFieldsDF %>% filter(wb_region=="East Asia & Pacific")
+cat("Correlation for Growth Rate for East Asia & Pacific: \n")
+cor(numericFieldsEAP[6:10])
+
+#view the correlation matrix for Europe & Central Asia
+numericFieldsECA <- modelingDataFieldsDF %>% filter(wb_region=="Europe & Central Asia")
+cat("\n Correlation for Growth Rate for Europe & Central Asia: \n")
+cor(numericFieldsECA[6:10])
+
+#view the correlation matrix for Latin America & Caribbean
+numericFieldsLAC <- modelingDataFieldsDF %>% filter(wb_region=="Latin America & Caribbean")
+cat("\n Correlation for Growth Rate for Latin America & Caribbean: \n")
+cor(numericFieldsLAC[6:10])
+
+cat("\n means:", mean(numericFieldsLAC$growth_rate_2015),mean(numericFieldsLAC$growth_rate_2016),mean(numericFieldsLAC$growth_rate_2017),mean(numericFieldsLAC$growth_rate_2018),mean(numericFieldsLAC$growth_rate_2019),"\n")
+
+#view the correlation matrix for Middle East & North Africa
+numericFieldsMENA <- modelingDataFieldsDF %>% filter(wb_region=="Middle East & North Africa")
+cat("\n Correlation for Growth Rate for Middle East & North Africa: \n")
+cor(numericFieldsMENA[6:10])
+
+cat("\n means:", mean(numericFieldsMENA$growth_rate_2015),mean(numericFieldsMENA$growth_rate_2016),mean(numericFieldsMENA$growth_rate_2017),mean(numericFieldsMENA$growth_rate_2018),mean(numericFieldsMENA$growth_rate_2019),"\n")
+
+#view the correlation matrix for North America
+numericFieldsNA <- modelingDataFieldsDF %>% filter(wb_region=="North America")
+cat("\n Correlation for Growth Rate for North America: \n")
+cor(numericFieldsNA[6:10])
+
+#view the correlation matrix for South Asia
+numericFieldsSA <- modelingDataFieldsDF %>% filter(wb_region=="South Asia")
+cat("\n Correlation for Growth Rate for South Asia: \n")
+cor(numericFieldsSA[6:10])
+
+cat("\n means:", mean(numericFieldsSA$growth_rate_2015),mean(numericFieldsSA$growth_rate_2016),mean(numericFieldsSA$growth_rate_2017),mean(numericFieldsSA$growth_rate_2018),mean(numericFieldsSA$growth_rate_2019),"\n")
+
+#view the correlation matrix for Sub-Saharan Africa
+numericFieldsSSA <- modelingDataFieldsDF %>% filter(wb_region=="Sub-Saharan Africa")
+cat("\n Correlation for Growth Rate for Sub-Saharan Africa: \n")
+cor(numericFieldsSSA[6:10])
+```
+
+
+```{r}
+### LINEAR MODELING: PREDICT 2019 #### 
+
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.1 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsEAP)
+
+  #output the summary of the linear model
+  cat("*** East Asia & Pacific: *** \n")
+  summary(linear.Model.1)
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.2 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsECA)
+
+  #output the summary of the linear model
+  cat("*** Europe & Central Asia: *** \n")
+  summary(linear.Model.2)
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.3 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsLAC)
+
+  #output the summary of the linear model
+  cat("*** Latin America & Caribbean: *** \n")  
+  summary(linear.Model.3)
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.4 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsMENA)
+
+  #output the summary of the linear model
+  cat("*** Middle East & North Africa: *** \n")    
+  summary(linear.Model.4)  
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.5 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsNA)
+
+  #output the summary of the linear model
+  cat("*** North America: *** \n") 
+  summary(linear.Model.5)  
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.6 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsSA)
+
+  #output the summary of the linear model
+  cat("*** South Asia: *** \n") 
+  summary(linear.Model.6)  
+  
+  #perform the linear regression model using the numeric-only data set
+  linear.Model.7 <-lm(growth_rate_2019~growth_rate_2015+growth_rate_2016+growth_rate_2017+growth_rate_2018, data = numericFieldsSSA)
+
+  #output the summary of the linear model
+  cat("*** Sub-Saharan Africa: *** \n") 
+  summary(linear.Model.7)  
 ```
 
 ```{r}
 #make the sampling predictable by setting the seed value
 set.seed(1000)
 
-#randomly sample elements to go into a training data set
-#training will be 70% of the data
-#this returns a set of indices
-trainList <- createDataPartition(y=EmploymentGrowthDF$higher_income,p=0.70,list=FALSE)
+#select 70% training data and store indexes
+trainList <- createDataPartition(y=modelingDataFieldsDF$blended_higher_income,p=0.70,list=FALSE)
 
 #include all of the elements at the indices in the training data set
-trainingDataSet <- EmploymentGrowthDF[trainList,]
+trainingDataSet <- modelingDataFieldsDF[trainList,]
 
 #construct the test set from everything that didn't go into training
-testingDataSet <- EmploymentGrowthDF[-trainList,]
+testingDataSet <- modelingDataFieldsDF[-trainList,]
 
-#train the model using the training data set and the svmRadial method
-#svmRadial kernel to do this projection
-svm.model <- train(higher_income~wb_region,
+#train the model
+svm.model.blendedHigherIncome <- train(blended_higher_income~.,
                    data=trainingDataSet,method="svmRadial",
                    trControl=trainControl(method="none"),
                    preProc=c("center","scale"))
 
 #output the final model summary
-svm.model$finalModel
+svm.model.blendedHigherIncome$finalModel
 
 ```
 ```{r}
 #Assess fit of the model with the test data
-svmPrediction <- predict(svm.model, testingDataSet, type="raw")
+svmPrediction <- predict(svm.model.blendedHigherIncome, testingDataSet, type="raw")
 
 #build a confusion matrix with caret package function
-confusionMatrix <- confusionMatrix(svmPrediction,testingDataSet$higher_income)
+confusionMatrix <- confusionMatrix(svmPrediction,testingDataSet$blended_higher_income)
 
 confusionMatrix
 ```
 
 ```{r}
 #build the model
-model.rpart <- rpart(higher_income~wb_region,data=trainingDataSet,method="class")
+model.rpart.blendedHigherIncome <- rpart(blended_higher_income~.,data=trainingDataSet,method="class")
 
 #visualize the results using rpart.plot()
-rpart.plot(model.rpart)
+rpart.plot(model.rpart.blendedHigherIncome)
 ```
 
 ```{r}
 #make predictions on the test set
-predictions <- predict(model.rpart, testingDataSet, type="class")
+predictions <- predict(model.rpart.blendedHigherIncome, testingDataSet, type="class")
 
 #output results in table format
-table(testingDataSet$higher_income,predictions)
+table(testingDataSet$blended_higher_income,predictions)
 ```
 
 
@@ -585,43 +762,50 @@ table(testingDataSet$higher_income,predictions)
 #make the sampling predictable by setting the seed value
 set.seed(1000)
 
-#randomly sample elements to go into a training data set
-#training will be 70% of the data
-#this returns a set of indices
-trainList2 <- createDataPartition(y=EmploymentGrowthDF$growth_binary_2019, p=0.70,list=FALSE)
+#select 70% training data and store indexes
+trainList2 <- createDataPartition(y=modelingDataFieldsDF$growth_classification_2019, p=0.70,list=FALSE)
 
 #include all of the elements at the indices in the training data set
-trainingDataSet2 <- EmploymentGrowthDF[trainList2,]
+trainingDataSet2 <- modelingDataFieldsDF[trainList2,]
 
 #construct the test set from everything that didn't go into training
-testingDataSet2 <- EmploymentGrowthDF[-trainList2,]
+testingDataSet2 <- modelingDataFieldsDF[-trainList2,]
 
-#train the model using the training data set and the svmRadial method
-#svmRadial kernel to do this projection
-svm.model2 <- train(growth_binary_2019~.,
-                   data=trainingDataSet,method="svmRadial",
+#train the model
+svm.model.2019Growth <- train(growth_classification_2019~.,
+                   data=trainingDataSet2,method="svmRadial",
                    trControl=trainControl(method="none"),
                    preProc=c("center","scale"))
 
 #output the final model summary
-svm.model2$finalModel
+svm.model.2019Growth$finalModel
 
+```
+
+```{r}
+#Assess fit of the model with the test data
+svmPrediction2 <- predict(svm.model.2019Growth, testingDataSet2, type="raw")
+
+#build a confusion matrix with caret package function
+confusionMatrix <- confusionMatrix(svmPrediction2,testingDataSet2$growth_classification_2019)
+
+confusionMatrix
 ```
 
 
 ```{r}
 #build the model
-model.rpart2 <- rpart(growth_binary_2019~.,data=trainingDataSet,method="class")
+model.rpart.2019GrowthClassification <- rpart(growth_classification_2019~.,data=trainingDataSet,method="class")
 
 #visualize the results using rpart.plot()
-rpart.plot(model.rpart2)
+rpart.plot(model.rpart.2019GrowthClassification)
 ```
 
 
 ```{r}
 #make predictions on the test set
-predictions2 <- predict(model.rpart2, testingDataSet, type="class")
+predictions2 <- predict(model.rpart.2019GrowthClassification, testingDataSet, type="class")
 
 #output results in table format
-table(testingDataSet$growth_binary_2019,predictions2)
+table(testingDataSet$growth_classification_2019,predictions2)
 ```
