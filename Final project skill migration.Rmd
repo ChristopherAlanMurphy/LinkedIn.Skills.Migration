@@ -1,0 +1,834 @@
+---
+title: "Final project skill migration"
+author: "Daylin"
+date: "2024-03-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+#function to manage packages
+EnsurePackage <- function(x){
+  
+  x <- as.character(x)
+  
+  #this statement will return TRUE if package not yet downloaded/installed
+  if (!require(x,character.only=TRUE)){
+    
+    install.packages(pkgs=x, repos = "http://cran.r-project.org")
+    require(x,character.only=TRUE)
+  }}
+```
+
+
+```{r}
+#specify the packages needed
+packages=c("tidyverse", "readxl","ggplot2","dplyr","stats","caret","rpart","rpart.plot", "corrplot")
+
+#use this function to check if each package is on the local machine
+#if a package is installed, it will be loaded
+#if any are not, the missing package(s) will be installed and loaded
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }})
+```
+
+
+```{r}
+#download the Consolidated Migration Info File and Create 3 Data Frames
+migrationInfo <- "https://datacatalogfiles.worldbank.org/ddh-published/0038044/DR0046256/public_use-talent-migration.xlsx?versionId=2024-02-13T16:57:39.2869535Z"
+
+#download this file from the web into a temporary Excel file
+download.file(migrationInfo, "tmpExcelFileMigration.xlsx", quiet=TRUE, mode="wb")
+
+#read the sheet into a new dataframe
+countryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Country Migration"))
+#read the sheet into a new dataframe
+industryMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Industry Migration"))
+#read the sheet into a new dataframe
+skillMigrationDF <- data.frame(read_excel("tmpExcelFileMigration.xlsx", sheet = "Skill Migration"))
+```
+
+
+```{r}
+#check for NA's in the dataset
+colSums(is.na(skillMigrationDF))
+
+#Explore dataframe
+str(skillMigrationDF)
+```
+
+#skillMigrationDF sorted by Region
+```{r}
+
+#East Asia & Pacific Data
+skillEAP.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "East Asia & Pacific")
+
+#Europe & Central Asia Data
+skillECA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Europe & Central Asia")
+
+#Latin America & Caribbean Data
+skillLAC.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Latin America & Caribbean")
+
+#Middle East & North Africa Data
+skillMENA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Middle East & North Africa")
+
+#North America Data
+skillNA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "North America")
+
+#South Asia Data
+skillSA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "South Asia")
+
+#Sub-Saharan Africa Data
+skillSSA.df <- filter(skillMigrationDF, skillMigrationDF$wb_region == "Sub-Saharan Africa")
+```
+
+
+```{r}
+#Average skill migration in East Asia & Pacific
+mean(skillEAP.df$net_per_10K_2015)
+mean(skillEAP.df$net_per_10K_2016)
+mean(skillEAP.df$net_per_10K_2017)
+mean(skillEAP.df$net_per_10K_2018)
+mean(skillEAP.df$net_per_10K_2019)
+#Average skill migration in East North America
+mean(skillNA.df$net_per_10K_2015)
+mean(skillNA.df$net_per_10K_2016)
+mean(skillNA.df$net_per_10K_2017)
+mean(skillNA.df$net_per_10K_2018)
+mean(skillNA.df$net_per_10K_2019)
+#Average skill migration in Europe & Central Asia
+mean(skillECA.df$net_per_10K_2015)
+mean(skillECA.df$net_per_10K_2016)
+mean(skillECA.df$net_per_10K_2017)
+mean(skillECA.df$net_per_10K_2018)
+mean(skillECA.df$net_per_10K_2019)
+#Average skill migration in Middle East & North Africa
+mean(skillMENA.df$net_per_10K_2015)
+mean(skillMENA.df$net_per_10K_2016)
+mean(skillMENA.df$net_per_10K_2017)
+mean(skillMENA.df$net_per_10K_2018)
+mean(skillMENA.df$net_per_10K_2019)
+#Average skill migration in Sub-Saharan Africa
+mean(skillSSA.df$net_per_10K_2015)
+mean(skillSSA.df$net_per_10K_2016)
+mean(skillSSA.df$net_per_10K_2017)
+mean(skillSSA.df$net_per_10K_2018)
+mean(skillSSA.df$net_per_10K_2019)
+#Average skill migration in Latin America & Caribbean
+mean(skillLAC.df$net_per_10K_2015)
+mean(skillLAC.df$net_per_10K_2016)
+mean(skillLAC.df$net_per_10K_2017)
+mean(skillLAC.df$net_per_10K_2018)
+mean(skillLAC.df$net_per_10K_2019)
+#Average skill migration in South Asia
+mean(skillSA.df$net_per_10K_2015)
+mean(skillSA.df$net_per_10K_2016)
+mean(skillSA.df$net_per_10K_2017)
+mean(skillSA.df$net_per_10K_2018)
+mean(skillSA.df$net_per_10K_2019)
+```
+
+
+```{r}
+#What are the countries from each region with highest migration each year
+max.skillmig15<-skillMigrationDF[which.max(skillMigrationDF$net_per_10K_2015),]
+head(max.skillmig15)
+max.skillmig16<-skillMigrationDF[which.max(skillMigrationDF$net_per_10K_2016),]
+head(max.skillmig16)
+max.skillmig17<-skillMigrationDF[which.max(skillMigrationDF$net_per_10K_2017),]
+head(max.skillmig17)
+max.skillmig18<-skillMigrationDF[which.max(skillMigrationDF$net_per_10K_2018),]
+head(max.skillmig18)
+max.skillmig19<-skillMigrationDF[which.max(skillMigrationDF$net_per_10K_2019),]
+head(max.skillmig19)
+```
+
+
+```{r}
+#What are the region with lowest migration each year
+
+min.skillmig15<-skillMigrationDF[which.min(skillMigrationDF$net_per_10K_2015),]
+head(min.skillmig15)
+min.skillmig16<-skillMigrationDF[which.min(skillMigrationDF$net_per_10K_2016),]
+head(min.skillmig16)
+min.skillmig17<-skillMigrationDF[which.min(skillMigrationDF$net_per_10K_2017),]
+head(min.skillmig17)
+min.skillmig18<-skillMigrationDF[which.min(skillMigrationDF$net_per_10K_2018),]
+head(min.skillmig18)
+min.skillmig19<-skillMigrationDF[which.min(skillMigrationDF$net_per_10K_2019),]
+head(min.skillmig19)
+```
+
+
+```{r}
+# Group by the income and sum the skill migration
+incomeEAP <- skillEAP.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeEAP
+
+incomeECA <- skillECA.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeECA
+
+incomeLAC <- skillLAC.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeLAC
+
+incomeMENA <- skillMENA.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeMENA
+
+incomeNA <- skillNA.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeNA
+
+incomeSA <- skillSA.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeSA
+
+incomeSSA <- skillSSA.df %>%
+  group_by(wb_income) %>%
+  summarise(sum = sum(net_per_10K_2015))
+incomeSSA
+```
+
+
+```{r}
+# Group by skill category and sum the skill migration
+skillGroupEAP <- skillEAP.df %>%
+  group_by(skill_group_category) %>%
+  summarise(sum = sum(net_per_10K_2015))
+skillGroupEAP
+
+skillGroupECA <- skillECA.df %>%
+  group_by(skill_group_category) %>%
+  summarise(sum = sum(net_per_10K_2015))
+skillGroupECA
+
+skillGroupLAC <- skillLAC.df %>%
+  group_by(skill_group_category) %>%
+  summarise(sum = sum(net_per_10K_2015))
+skillGroupLAC
+
+skillGroupMENA <- skillMENA.df %>%
+  group_by(skill_group_category) %>%
+  summarise(sum = sum(net_per_10K_2015))
+skillGroupMENA
+
+skillGroupNA <- skillNA.df %>%
+  group_by(skill_group_category) %>%
+  summarise(sum = sum(net_per_10K_2015))
+skillGroupNA
+```
+
+
+```{r}
+# Create scatter plot of "Income Classification vs Skill Migration by region"
+plotEAP<-ggplot(skillEAP.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "blue") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in EAP") +
+  theme_minimal()
+plotEAP
+
+plotECA<-ggplot(skillECA.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "green") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in NA") +
+  theme_minimal()
+plotECA
+
+plotLAC<-ggplot(skillLAC.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "orange") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in LAC") +
+  theme_minimal()
+plotLAC
+
+plotMENA<-ggplot(skillMENA.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "purple") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in MENA") +
+  theme_minimal()
+plotMENA
+
+plotSA<-ggplot(skillSA.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "red") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in SA") +
+  theme_minimal()
+plotSA
+
+plotSSA<-ggplot(skillSSA.df, aes(x = wb_income, y =net_per_10K_2015,)) +
+  geom_point(size = 1, color = "black") +
+  labs(x = "Income Classification", y = " Skill migration", title = "Income Classification vs Skill in SSA") +
+  theme_minimal()
+plotSSA
+```
+
+
+```{r}
+# Create scatter plot of Skill migration by region by year
+
+#Example of R code to create the graphs
+plotskilldf15<-ggplot(skillMigrationDF, aes(x = wb_region, y =net_per_10K_2015)) +
+  geom_point(size = 1, color = "blue") +
+  labs(x = "Region", y = " Skill migration", title = "skill migration by region in 2015 ") +
+  theme_minimal()+
+    scale_x_discrete(guide = guide_axis(angle = 45)) 
+plotskilldf15
+
+plotskilldf16<-ggplot(skillMigrationDF, aes(x = wb_region, y =net_per_10K_2016)) +
+  geom_point(size = 1, color = "orange") +
+  labs(x = "Region", y = " Skill migration", title = "skill migration by region in 2016 ") +
+  theme_minimal()+
+    scale_x_discrete(guide = guide_axis(angle = 45)) 
+plotskilldf16
+
+plotskilldf17<-ggplot(skillMigrationDF, aes(x = wb_region, y =net_per_10K_2017)) +
+  geom_point(size = 1, color = "red") +
+  labs(x = "Region", y = " Skill migration", title = "skill migration by region in 2017 ") +
+  theme_minimal()+
+    scale_x_discrete(guide = guide_axis(angle = 45)) 
+plotskilldf17
+
+plotskilldf18<-ggplot(skillMigrationDF, aes(x = wb_region, y =net_per_10K_2018)) +
+  geom_point(size = 1, color = "green") +
+  labs(x = "Region", y = " Skill migration", title = "skill migration by region in 2018 ") +
+  theme_minimal()+
+    scale_x_discrete(guide = guide_axis(angle = 45)) 
+plotskilldf18
+
+plotskilldf19<-ggplot(skillMigrationDF, aes(x = wb_region, y =net_per_10K_2019)) +
+  geom_point(size = 1, color = "purple") +
+  labs(x = "Region", y = " Skill migration", title = "skill migration by region in 2019 ") +
+  theme_minimal()+
+    scale_x_discrete(guide = guide_axis(angle = 45)) 
+plotskilldf19
+```
+
+
+```{r}
+# Create histograms of Skill migration by region by year
+ggplot(skillEAP.df, aes(x=net_per_10K_2015))+ 
+  geom_histogram(binwidth = 15, color="black", fill="blue")+
+  labs(title = "Skill migration in East Asia & Pacific in 2015",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillEAP.df, aes(x=net_per_10K_2016))+ 
+  geom_histogram(binwidth = 15, color="black", fill="blue")+
+  labs(title = "Skill migration in East Asia & Pacific in 2016",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillEAP.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 15, color="black", fill="blue")+
+  labs(title = "Skill migration in East Asia & Pacific in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillEAP.df, aes(x=net_per_10K_2018))+ 
+  geom_histogram(binwidth = 15, color="black", fill="blue")+
+  labs(title = "Skill migration in East Asia & Pacific in 2018",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillEAP.df, aes(x=net_per_10K_2019))+ 
+  geom_histogram(binwidth = 15, color="black", fill="blue")+
+  labs(title = "Skill migration in East Asia & Pacific in 2018",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillNA.df, aes(x=net_per_10K_2015))+ 
+  geom_histogram(binwidth = 5, color="black", fill="red")+
+  labs(title = "Skill migration in North America",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillNA.df, aes(x=net_per_10K_2016))+ 
+  geom_histogram(binwidth = 5, color="black", fill="red")+
+  labs(title = "Skill migration in North America in 2016",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillNA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 5, color="black", fill="red")+
+  labs(title = "Skill migration in North America in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillNA.df, aes(x=net_per_10K_2018))+ 
+  geom_histogram(binwidth = 5, color="black", fill="red")+
+  labs(title = "Skill migration in North America in 2018",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillNA.df, aes(x=net_per_10K_2019))+ 
+  geom_histogram(binwidth = 5, color="black", fill="red")+
+  labs(title = "Skill migration in North America in 2019",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSA.df, aes(x=net_per_10K_2015))+ 
+  geom_histogram(binwidth = 5, color="black", fill="green")+
+  labs(title = "Skill migration in South Asia in 2015",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSA.df, aes(x=net_per_10K_2016))+ 
+  geom_histogram(binwidth = 5, color="black", fill="green")+
+  labs(title = "Skill migration in South Asia in 2016",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 5, color="black", fill="green")+
+  labs(title = "Skill migration in South Asia in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSA.df, aes(x=net_per_10K_2018))+ 
+  geom_histogram(binwidth = 5, color="black", fill="green")+
+  labs(title = "Skill migration in South Asia in 2018",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSA.df, aes(x=net_per_10K_2019))+ 
+  geom_histogram(binwidth = 5, color="black", fill="green")+
+  labs(title = "Skill migration in South Asia in 2019",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2015))+ 
+  geom_histogram(binwidth = 15, color="black", fill="orange")+
+  labs(title = "Skill migration in South Asia in 2015",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2016))+ 
+  geom_histogram(binwidth = 15, color="black", fill="orange")+
+  labs(title = "Skill migration in South Asia in 2016",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 20, color="black", fill="orange")+
+  labs(title = "Skill migration in South Asia in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2018))+ 
+  geom_histogram(binwidth = 15, color="black", fill="orange")+
+  labs(title = "Skill migration in South Asia in 2018",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2019))+ 
+  geom_histogram(binwidth = 15, color="black", fill="orange")+
+  labs(title = "Skill migration in South Asia in 2019",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillMENA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 20, color="black", fill="orange")+
+  labs(title = "Skill migration in Middle East & North Africa in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillECA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 20, color="black", fill="purple")+
+  labs(title = "Skill migration in Middle Europe & Central Asia in 2017",
+  x="Number of Cases",
+  y="Frequency")
+
+ggplot(skillSSA.df, aes(x=net_per_10K_2017))+ 
+  geom_histogram(binwidth = 20, color="black", fill="yellow")+
+  labs(title = "Skill migration in Sub-Saharan Africa in 2017",
+  x="Number of Cases",
+  y="Frequency")
+```
+
+
+```{r}
+#add column with cumulative net_per_10k skill migration
+a=skillMigrationDF$net_per_10K_2015
+b=skillMigrationDF$net_per_10K_2016
+c=skillMigrationDF$net_per_10K_2017
+d=skillMigrationDF$net_per_10K_2018
+e=skillMigrationDF$net_per_10K_2019
+
+skillMigrationDF$net_per_10k_cumulative<-a+b+c+d+e
+
+#Find correlation between skill migration and other variables 
+
+skillMigrationDF$wb_income<-as.factor(skillMigrationDF$wb_income)
+x=as.numeric(skillMigrationDF$wb_income)
+skillMigrationDF$wb_region<-as.factor(skillMigrationDF$wb_region)
+y=as.numeric(skillMigrationDF$wb_region)
+skillMigrationDF$skill_group_category<-as.factor(skillMigrationDF$skill_group_category)
+z=as.numeric(skillMigrationDF$skill_group_category)
+
+cor.test(x,skillMigrationDF$net_per_10k_cumulative)
+#There is a negative correlation of -0.4 between skill migration and income 
+cor.test(y,skillMigrationDF$net_per_10k_cumulative)
+#There is little correlation between region and skill migration (-0.1)
+cor.test(z,skillMigrationDF$net_per_10k_cumulative)
+#there is no correlation between the skill groups and skill migration, p value >0.05 was not statistically significant
+```
+
+
+```{r}
+#Linear model
+
+# Set URL for the Excel file
+migrationInfoURL <- "https://datacatalogfiles.worldbank.org/ddh-published/0038044/DR0046256/public_use-talent-migration.xlsx?versionId=2024-02-13T16:57:39.2869535Z"
+
+# Filter the skill migration data for relevant columns
+skillMigrationDF1 <- skillMigrationDF[c("net_per_10K_2015", "net_per_10K_2016", "net_per_10K_2017", "net_per_10K_2018", "net_per_10K_2019")]
+
+# Setup the linear regression model using the migration rates from 2015 to 2018 to predict the rates in 2019
+linearModel <- lm(net_per_10K_2019 ~ net_per_10K_2015 + net_per_10K_2016 + net_per_10K_2017 + net_per_10K_2018, data = skillMigrationDF1)
+
+# Summary of the linear model
+summary(linearModel)
+
+# Plot the correlation matrix of the net migration rates to visualize their relationships
+corrMatrix <- cor(skillMigrationDF1)
+corrplot(corrMatrix, method = "circle")
+
+# Optional: Check diagnostics plots to evaluate assumptions (normality, linearity, homoscedasticity, and absence of multicollinearity)
+par(mfrow = c(2,2))
+plot(linearModel)
+```
+
+
+```{r}
+#Update Skill Migration with an average for each observation
+
+
+#add a column to hold binary income classification, default to 0
+skillMigrationDF <- skillMigrationDF %>% mutate(income_class=0)
+
+#find indexes of higher income countries
+highIncomeIndexList <- which(skillMigrationDF$wb_income=="High income")
+middleIncomeIndexList <- which(skillMigrationDF$wb_income=="Upper middle income")
+
+#set binary column to 1 at each index for higher income countries
+skillMigrationDF$income_class[highIncomeIndexList] <- 1
+skillMigrationDF$income_class[middleIncomeIndexList] <- 1
+
+#set new binary field as type factor
+skillMigrationDF$income_class <- as.factor(skillMigrationDF$income_class)
+
+#add a column to hold binary skill classification for cumulative, default to 0
+skillMigrationDF <- skillMigrationDF %>% mutate(net_per_10K_2019_binary=0)
+
+#find indexes where cumulative is positive
+positiveskillMIndexList <- which(skillMigrationDF$net_per_10K_2019 > 0)
+
+#set binary column to 1 at each index for higher income countries
+skillMigrationDF$net_per_10K_2019_binary[positiveskillMIndexList] <- 1
+
+#set new binary field as type factor
+skillMigrationDF$net_per_10K_2019_binary <- as.factor(skillMigrationDF$net_per_10K_2019_binary )
+```
+
+
+```{r}
+#make the sampling predictable by setting the seed value
+set.seed(1000)
+
+#randomly sample elements to go into a training data set
+#training will be 70% of the data
+#this returns a set of indices
+trainList <- createDataPartition(y=skillMigrationDF$income_class,p=0.70,list=FALSE)
+
+#include all of the elements at the indices in the training data set
+trainingDataSet <- skillMigrationDF[trainList,]
+
+#construct the test set from everything that didn't go into training
+testingDataSet <- skillMigrationDF[-trainList,]
+
+#train the model using the training data set and the svmRadial method
+#svmRadial kernel to do this projection
+svm.model <- train(income_class~wb_region,
+                   data=trainingDataSet,method="svmRadial",
+                   trControl=trainControl(method="none"),
+                   preProc=c("center","scale"))
+
+#output the final model summary
+svm.model$finalModel
+
+```
+```{r}
+#Assess fit of the model with the test data
+svmPrediction <- predict(svm.model, testingDataSet, type="raw")
+
+#build a confusion matrix with caret package function
+confusionMatrix <- confusionMatrix(svmPrediction,testingDataSet$income_class)
+
+confusionMatrix
+```
+
+```{r}
+#build the model
+model.rpart <- rpart(income_class~wb_region,data=trainingDataSet,method="class")
+
+#visualize the results using rpart.plot()
+rpart.plot(model.rpart)
+```
+
+```{r}
+#make predictions on the test set
+predictions <- predict(model.rpart, testingDataSet, type="class")
+
+#output results in table format
+table(testingDataSet$income_class,predictions)
+```
+
+
+```{r}
+
+#capture only the numeric variables in a new data frame
+skillMigrationDF3 <- data.frame(net_per_10K_2015=skillMigrationDF$net_per_10K_2015,net_per_10K_2016=skillMigrationDF$net_per_10K_2016,net_per_10K_2017=skillMigrationDF$net_per_10K_2017,net_per_10K_2018=skillMigrationDF$net_per_10K_2018,net_per_10K_2019=skillMigrationDF$net_per_10K_2019,income_class=as.factor(skillMigrationDF$income_class))
+
+#view the structure of the data frame
+head(skillMigrationDF3)
+
+```
+
+```{r}
+#make the sampling predictable by setting the seed value
+set.seed(1000)
+
+#randomly sample elements to go into a training data set
+#training will be 70% of the data
+#this returns a set of indices
+trainList3<- createDataPartition(y=skillMigrationDF3$income_class, p=0.70,list=FALSE)
+
+#include all of the elements at the indices in the training data set
+training3 <- skillMigrationDF3[trainList3,]
+
+#construct the test set from everything that didn't go into training
+testing3 <- skillMigrationDF3[-trainList3,]
+
+#train the model using the training data set and the svmRadial method
+#svmRadial kernel to do this projection
+svm.model.3 <- train(income_class~.,
+                   data=training3,method="svmRadial",
+                   trControl=trainControl(method="none"),
+                   preProc=c("center","scale"))
+
+#output the final model summary
+svm.model.3$finalModel
+
+```
+
+```{r}
+#Assess fit of the model with the test data
+svmPred3 <- predict(svm.model.3, testing3, type="raw")
+
+#build a confusion matrix with caret package function
+cMskillMigration3 <- confusionMatrix(svmPred3,testing3$income_class)
+
+cMskillMigration3
+```
+
+```{r}
+#build the model
+model.rpart.3 <- rpart(income_class~.,data=training3,method="class")
+
+#visualize the results using rpart.plot()
+rpart.plot(model.rpart.3)
+```
+
+
+```{r}
+#### PREPARE A NEW DATA FRAME WITH ONLY THE NUMERIC VALUES NEEDED FOR MODELING ####
+
+#capture the data into a new data frame to hold only numeric values
+  calculatedFieldsDF <- skillMigrationDF
+  
+  ### START: High INCOME BINARY FIELD SET UP ###
+
+    #1.) add a column to hold high income binary, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(high_income=0)
+    
+    #2.) find indexes of higher income countries
+    highIncomeIndexList <- which(calculatedFieldsDF$wb_income=="High income")
+    
+    #3.) capture high income countries = 1
+    calculatedFieldsDF$high_income[highIncomeIndexList] <- 1
+    
+    #4.) set field type to factor
+    calculatedFieldsDF$high_income <- as.factor(calculatedFieldsDF$high_income)
+    
+  ### END: HIGH INCOME BINARY FIELD SET UP ###
+  
+  ### START: UPPER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(upper_middle_income=0)
+    
+    #2.) find indexes of middle income countries
+    upperMiddleIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Upper middle income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$upper_middle_income[upperMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$upper_middle_income <- as.factor(calculatedFieldsDF$upper_middle_income)
+    
+  ### END: UPPER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+  ### START: LOWER MIDDLE INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(lower_middle_income=0)
+    
+    #2.) find indexes of middle income countries
+    lowerMiddleIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Lower middle income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$lower_middle_income[lowerMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$lower_middle_income <- as.factor(calculatedFieldsDF$lower_middle_income)
+    
+  ### END: LOWER MIDDLE INCOME BINARY FIELD SET UP ###
+
+  ### START: LOW INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold upper middle income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(low_income=0)
+    
+    #2.) find indexes of middle income countries
+    lowIncomeIndexList <- which(calculatedFieldsDF$wb_income=="Low income")
+    
+    #3.) capture middle income countries = 1
+    calculatedFieldsDF$low_income[lowIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$low_income <- as.factor(calculatedFieldsDF$low_income)
+    
+  ### END: LOW INCOME BINARY FIELD SET UP ###
+    
+  ### START: BLENDED HIGHER INCOME BINARY FIELD SET UP ###
+    
+    #1.) add a column to hold blended upper income classification, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(blended_higher_income=0)
+    
+    #2.) capture middle income countries = 1
+    calculatedFieldsDF$blended_higher_income[highIncomeIndexList] <- 1
+    calculatedFieldsDF$blended_higher_income[upperMiddleIncomeIndexList] <- 1
+  
+    #4.) set field type to factor
+    calculatedFieldsDF$blended_higher_income <- as.factor(calculatedFieldsDF$blended_higher_income)
+    
+  ### END: BLENDED HIGHER INCOME BINARY FIELD SET UP ###
+```
+
+
+```{r}
+### START: 2019 GROWTH CLASSIFICATION BINARY FIELD SET UP ###    
+ 
+    #1.) add a column to hold binary growth classification for 2019, default to 0
+    calculatedFieldsDF <- calculatedFieldsDF %>% mutate(growth_classification_2019=0)
+  
+    #2.) find indexes where 2019 growth is positive
+    positiveGrowthIndexList <- which(calculatedFieldsDF$growth_rate_2019 > 0)
+  
+    #3.) capture 2019 growth classification = 1
+    calculatedFieldsDF$growth_classification_2019[positiveGrowthIndexList] <- 1
+  
+    #4.) set new binary field as type factor
+    calculatedFieldsDF$growth_classification_2019 <- as.factor(calculatedFieldsDF$growth_classification_2019)
+    
+  ### END: 2019 GROWTH CLASSIFICATION BINARY FIELD SET UP ### 
+```
+
+```{r}
+
+#capture only the numeric variables in a new data frame
+modelingDataFieldsDF <- data.frame(blended_higher_income=calculatedFieldsDF$blended_higher_income,
+                                   high_income=calculatedFieldsDF$high_income,
+                                   upper_middle_income=calculatedFieldsDF$upper_middle_income,
+                                   lower_middle_income=calculatedFieldsDF$lower_middle_income,
+                                   net_per_10K_2015=calculatedFieldsDF$net_per_10K_2015,
+                                   net_per_10K_2016=calculatedFieldsDF$net_per_10K_2016,
+                                   net_per_10K_2017=calculatedFieldsDF$net_per_10K_2017,
+                                   net_per_10K_2018=calculatedFieldsDF$net_per_10K_2018,
+                                   net_per_10K_2019=calculatedFieldsDF$net_per_10K_2019,
+                                   wb_region=calculatedFieldsDF$wb_region)
+
+modelingDataFieldsDF$wb_region <- as.factor(modelingDataFieldsDF$wb_region)
+
+#view the structure of the data frame
+str(modelingDataFieldsDF)
+```
+
+
+
+```{r}
+#make the sampling predictable by setting the seed value
+set.seed(1000)
+
+#select 70% training data and store indexes
+trainList <- createDataPartition(y=modelingDataFieldsDF$blended_higher_income,p=0.70,list=FALSE)
+
+#include all of the elements at the indices in the training data set
+trainingDataSet <- modelingDataFieldsDF[trainList,]
+
+#construct the test set from everything that didn't go into training
+testingDataSet <- modelingDataFieldsDF[-trainList,]
+
+#train the model
+svm.model.blendedHigherIncome <- train(blended_higher_income~.,
+                   data=trainingDataSet,method="svmRadial",
+                   trControl=trainControl(method="none"),
+                   preProc=c("center","scale"))
+
+#output the final model summary
+svm.model.blendedHigherIncome$finalModel
+```
+
+
+```{r}
+#Assess fit of the model with the test data
+svmPrediction <- predict(svm.model.blendedHigherIncome, testingDataSet, type="raw")
+
+#build a confusion matrix with caret package function
+confusionMatrix <- confusionMatrix(svmPrediction,testingDataSet$blended_higher_income)
+
+confusionMatrix
+```
+
+
+```{r}
+#build the model
+model.rpart.blendedHigherIncome <- rpart(blended_higher_income~.,data=trainingDataSet,method="class")
+
+#visualize the results using rpart.plot()
+rpart.plot(model.rpart.blendedHigherIncome)
+```
+
+
+```{r}
+#make predictions on the test set
+predictions <- predict(model.rpart.blendedHigherIncome, testingDataSet, type="class")
+
+#output results in table format
+table(testingDataSet$blended_higher_income,predictions)
+```
+
+
