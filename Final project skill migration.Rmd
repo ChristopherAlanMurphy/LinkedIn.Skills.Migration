@@ -1,7 +1,7 @@
 ---
 title: "Final project skill migration"
-author: "Daylin"
-date: "2024-03-16"
+author: "Project Team 3"
+date: "2024-03-22"
 output: html_document
 ---
 
@@ -746,7 +746,7 @@ rpart.plot(model.rpart.3)
     calculatedFieldsDF <- calculatedFieldsDF %>% mutate(growth_classification_2019=0)
   
     #2.) find indexes where 2019 growth is positive
-    positiveGrowthIndexList <- which(calculatedFieldsDF$growth_rate_2019 > 0)
+    positiveGrowthIndexList <- which(calculatedFieldsDF$net_per_10K_2019 > 0)
   
     #3.) capture 2019 growth classification = 1
     calculatedFieldsDF$growth_classification_2019[positiveGrowthIndexList] <- 1
